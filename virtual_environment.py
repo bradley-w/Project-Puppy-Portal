@@ -61,8 +61,8 @@ class Event:
 
 class Tag:
     value = None
-	program = False
-    def record_tag(self,input_tag):
+program = False
+def record_tag(self,input_tag):
         value = input_tag
 
 
@@ -102,34 +102,23 @@ def record_RFID_tag(value):
 		tag = open("tags.txt",w)
 		tag.seek(-1)
 		tag.write("\n")
-		tag.write(str(reader.value+"\n")
+		tag.write(str(reader.value+"\n"))
 		tag.close()
-	else:
-		reader.program = False
 
-# button = Event()
-# timer = Event()
-# motor = Motor()
-# hall_top = Event()
-# hall_bottom = Event()
-# RFID_in = Event()
-# RFID_out = Event()
-# prox_in = Event()
-# prox_out = Event()
-# reader = Tag()
 while(True):
 	blynk.run()
+	reader.program = False
 	time.sleep(.5)
-    if button.event == 1 and hall_top.event == 1:
-        motor.backward()
-		trigger = 1
-    elif button.event == 1 and hall_top.event == 0 and motor.motor == -1:
-        motor.stop()
-    elif button.event == 0 and hall_top.event == 0 and motor.motor == -1 and trigger == 1:
-        motor.stop()
-        time.sleep(2)
-    elif button.event == 0 and hall_top.event == 0 and motor.motor == 0 and trigger == 1:
-        motor.forward()
+        if button.event == 1 and hall_top.event == 1:
+            motor.backward()
+            trigger = 1
+        elif button.event == 1 and hall_top.event == 0 and motor.motor == -1:
+            motor.stop()
+        elif button.event == 0 and hall_top.event == 0 and motor.motor == -1 and trigger == 1:
+            motor.stop()
+            time.sleep(2)
+        elif button.event == 0 and hall_top.event == 0 and motor.motor == 0 and trigger == 1:
+            motor.forward()
 	elif motor.motor == 1 and hall_bottom.event == 0 and trigger == 1:
 		motor.stop()
 		trigger = 0
