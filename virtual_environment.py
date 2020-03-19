@@ -2,7 +2,7 @@ import BlynkLib
 from statemachine import StateMachine,State
 import time
 
-auth = "Authentication Token"
+auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
 blynk = BlynkLib.Blynk(auth)
 class Full_Assembly_Outside(StateMachine):
 	search = State("Searching For Dog", initial = True)
@@ -60,10 +60,10 @@ class Event:
 			self.event = 0
 
 class Tag:
-    value = None
-program = False
-def record_tag(self,input_tag):
-        value = input_tag
+	value = None
+	program = False
+	def record_tag(self,input_tag):
+        	value = input_tag
 
 
 button = Event()
