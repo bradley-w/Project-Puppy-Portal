@@ -2,7 +2,7 @@ import BlynkLib
 from statemachine import StateMachine,State
 import time
 
-auth = "Authentication Token"
+auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
 blynk = BlynkLib.Blynk(auth)
 class Full_Assembly_Outside(StateMachine):
 	search = State("Searching For Dog", initial = True)
@@ -47,7 +47,6 @@ class Motor:
 		self.motor = 1
 	def backward(self):
 		self.motor = -1
-        
 	def stop(self):
 		self.motor = 0
 
@@ -60,10 +59,10 @@ class Event:
 			self.event = 0
 
 class Tag:
-    value = None
+	value = None
 	program = False
-    def record_tag(self,input_tag):
-        value = input_tag
+	def record_tag(self,input_tag):
+        	value = input_tag
 
 
 button = Event()
@@ -103,9 +102,6 @@ def record_RFID_tag(value):
 		tag.seek(-1)
 		tag.write("\n")
 		tag.write(str(reader.value+"\n")
-		tag.close()
-	else:
-		reader.program = False
 
 # button = Event()
 # timer = Event()
@@ -117,19 +113,21 @@ def record_RFID_tag(value):
 # prox_in = Event()
 # prox_out = Event()
 # reader = Tag()
+
 while(True):
 	blynk.run()
 	time.sleep(.5)
-    if button.event == 1 and hall_top.event == 1:
-        motor.backward()
+	reader.program = False
+	if button.event == 1 and hall_top.event == 1:
+        	motor.backward()
 		trigger = 1
-    elif button.event == 1 and hall_top.event == 0 and motor.motor == -1:
-        motor.stop()
-    elif button.event == 0 and hall_top.event == 0 and motor.motor == -1 and trigger == 1:
-        motor.stop()
-        time.sleep(2)
-    elif button.event == 0 and hall_top.event == 0 and motor.motor == 0 and trigger == 1:
-        motor.forward()
+	elif button.event == 1 and hall_top.event == 0 and motor.motor == -1:
+        	motor.stop()
+	elif button.event == 0 and hall_top.event == 0 and motor.motor == -1 and trigger == 1:
+        	motor.stop()
+        	time.sleep(2)
+	elif button.event == 0 and hall_top.event == 0 and motor.motor == 0 and trigger == 1:
+        	motor.forward()
 	elif motor.motor == 1 and hall_bottom.event == 0 and trigger == 1:
 		motor.stop()
 		trigger = 0
@@ -183,8 +181,3 @@ while(True):
 				elif hall_bottom.event == 0 and motor.motor == 1:
 					motor.stop()
 					portal_out.door_closed()
-
-		
-
-
-    
