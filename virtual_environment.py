@@ -2,7 +2,7 @@ import BlynkLib
 from statemachine import StateMachine,State
 import time
 
-auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
+auth = "auth token"
 blynk = BlynkLib.Blynk(auth)
 class Full_Assembly_Outside(StateMachine):
 	search = State("Searching For Dog", initial = True)
