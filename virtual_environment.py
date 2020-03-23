@@ -59,6 +59,17 @@ class Event:
 		else:
 			self.event = 0
 
+class Timer:
+	trigger = 1
+	start_time = [0,0,0]
+	stop_time = [0,0,0]
+	clock_time = [time.localtime().tm_hour,time.localtime().tm_min, time.localtime().tm_sec]
+	def compare(self):
+		if start_time == clock_time:
+			self.trigger = 0
+		elif stop_time == clock_time:
+			self.trigger = 1
+
 class Tag:
 	value = None
 	program = False
@@ -68,7 +79,7 @@ class Tag:
 
 button = Event()
 trigger = 0
-timer = Event()
+timer = Timer()
 motor = Motor()
 hall_top = Event()
 hall_bottom = Event()
@@ -91,9 +102,19 @@ reader.record_tag(123456789012345)
 def manual_override(value):
 	button.toggle(int(value[0]))
 
+@blynk.ON('readV0')
+def v0_read_handler():
+	blynk.virtual_write(0,'Sets the time to shutdown inside door')
+
 @blynk.VIRTUAL_WRITE(2)
 def programmable_timer(value):
-	timer.toggle(int(value[0]))
+	print(value)
+	timer.start_time[0] = (int((int(value[0]-int(value[0])%3600)/3600))
+	timer.start_time[1] = (int((int(value[0])%3600-int(value[0])%3600%60)/60))
+	timer.start_time[2] = (int((int(value[0])%3600%60)))
+	timer.stop_time[0] = (int((int(value[1]-int(value[1])%3600)/3600))
+	timer.stop_time[1] = (int((int(value[1])%3600-int(value[1])%3600%60)/60))
+	timer.stop_time[2] = (int((int(value[1])%3600%60)))
 
 @blynk.VIRTUAL_WRITE(3)
 def record_RFID_tag(value):
@@ -105,10 +126,13 @@ def record_RFID_tag(value):
 		tag.write(str(reader.value+"\n"))
 		tag.close()
 
+print(timer.event)
+
 while(True):
 	blynk.run()
+	print(timer.event)
 	reader.program = False
-	time.sleep(.5)
+	#time.sleep(.5)
         if button.event == 1 and hall_top.event == 1:
             motor.backward()
             trigger = 1
