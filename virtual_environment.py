@@ -2,7 +2,7 @@ import BlynkLib
 from statemachine import StateMachine,State
 import time
 
-auth = "auth token"
+auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
 blynk = BlynkLib.Blynk(auth)
 class Full_Assembly_Outside(StateMachine):
 	search = State("Searching For Dog", initial = True)
@@ -36,18 +36,23 @@ class Door:
 
 	def up(self):
 		while self.position < self.size:
-			self.position += 1;time.sleep(.5)
+			self.position += 1
+			print(self.position)
+			time.sleep(.5)
 	def down(self):
-		while position > 0:
-			self.position -= 1;time.sleep(.5)
+		while self.position > 0:
+			self.position -= 1
+			print(self.position)
+			time.sleep(.5)
 
 class Motor:
 	motor = 0
 	def forward(self):
 		self.motor = 1
+		Door().down()
 	def backward(self):
 		self.motor = -1
-        
+        	Door().up()
 	def stop(self):
 		self.motor = 0
 
@@ -109,12 +114,12 @@ def v0_read_handler():
 @blynk.VIRTUAL_WRITE(2)
 def programmable_timer(value):
 	print(value)
-	timer.start_time[0] = (int((int(value[0]-int(value[0])%3600)/3600))
-	timer.start_time[1] = (int((int(value[0])%3600-int(value[0])%3600%60)/60))
-	timer.start_time[2] = (int((int(value[0])%3600%60)))
-	timer.stop_time[0] = (int((int(value[1]-int(value[1])%3600)/3600))
-	timer.stop_time[1] = (int((int(value[1])%3600-int(value[1])%3600%60)/60))
-	timer.stop_time[2] = (int((int(value[1])%3600%60)))
+	timer.start_time[0] = int((int(value[0])-int(value[0])%3600)/3600)
+	timer.start_time[1] = int((int(value[0])%3600-int(value[0])%3600%60)/60)
+	timer.start_time[2] = int((int(value[0])%3600%60))
+	timer.stop_time[0] = int((int(value[1])-int(value[1])%3600)/3600)
+	timer.stop_time[1] = int((int(value[1])%3600-int(value[1])%3600%60)/60)
+	timer.stop_time[2] = int((int(value[1])%3600%60))
 
 @blynk.VIRTUAL_WRITE(3)
 def record_RFID_tag(value):
@@ -126,24 +131,47 @@ def record_RFID_tag(value):
 		tag.write(str(reader.value+"\n"))
 		tag.close()
 
-print(timer.event)
+
+"""
+The following functions are to be removed for the operation of the physical device 
+since these will no longer be button inputs but sensor inputs
+"""
+
+@blynk.VIRTUAL_WRITE(4)
+def hall_top_toggle(value):
+	hall_top.toggle(int(value[0]))
+
+@blynk.VIRTUAL_WRITE(5)
+def hall_bottom_toggle(value):
+	hall_bottom.toggle(int(value[0]))
 
 while(True):
 	blynk.run()
-	print(timer.event)
+	print(timer.start_time)
 	reader.program = False
 	#time.sleep(.5)
-        if button.event == 1 and hall_top.event == 1:
+        if( button.event == 1 and 
+	   hall_top.event == 1):
             motor.backward()
             trigger = 1
-        elif button.event == 1 and hall_top.event == 0 and motor.motor == -1:
+        elif( button.event == 1 and 
+		hall_top.event == 0 and 
+		motor.motor == -1):
             motor.stop()
-        elif button.event == 0 and hall_top.event == 0 and motor.motor == -1 and trigger == 1:
+        elif (button.event == 0 and 
+		hall_top.event == 0 and 
+		motor.motor == -1 and 
+		trigger == 1):
             motor.stop()
             time.sleep(2)
-        elif button.event == 0 and hall_top.event == 0 and motor.motor == 0 and trigger == 1:
+        elif( button.event == 0 and 
+		hall_top.event == 0 and
+		motor.motor == 0 and 
+		trigger == 1):
             motor.forward()
-	elif motor.motor == 1 and hall_bottom.event == 0 and trigger == 1:
+	elif (motor.motor == 1 and 
+		hall_bottom.event == 0 and 
+		trigger == 1):
 		motor.stop()
 		trigger = 0
 	elif motor.motor == 0 and hall_bottom.event == 0 and button.event == 0 and trigger == 0:
@@ -172,7 +200,7 @@ while(True):
 				portal_out.door_closed()
 
 
-		if timer.event == 1:
+		if timer.trigger == 1:
 			if prox_in.event == 1 and (portal_out.current_state == portal_out.search or portal_out.current_state == portal_out.close_door):
 				portal_out.found()
 				RFID_in.event = 1
