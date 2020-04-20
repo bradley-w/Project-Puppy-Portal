@@ -208,86 +208,120 @@ while(True):
 	reader.program = False
 	#time.sleep(.5)
         if( button.event == 1 and 
-	   hall_top.event == 1):
-            motor.backward()
-            trigger = 1
+	    hall_top.event == 1):
+		motor.backward()
+		trigger = 1
+		print(0)
         elif( button.event == 1 and 
-		hall_top.event == 0 and 
-		motor.motor == -1):
-            motor.stop()
+	      hall_top.event == 0 and 
+	      motor.motor == -1):
+		motor.stop()
+		print(1)
         elif (button.event == 0 and 
 		hall_top.event == 0 and 
 		motor.motor == -1 and 
 		trigger == 1):
             motor.stop()
             time.sleep(2)
+            print(3)
         elif( button.event == 0 and 
 		hall_top.event == 0 and
 		motor.motor == 0 and 
 		trigger == 1):
             motor.forward()
+            print(4)
 	elif (motor.motor == 1 and 
 		hall_bottom.event == 0 and 
 		trigger == 1):
 		motor.stop()
 		trigger = 0
+		print(5)
 	elif (motor.motor == 0 and 
 		hall_bottom.event == 0 and 
 		button.event == 0 and 
 		trigger == 0):
 		print("base")
-		if prox_out.event == 1 and (portal_out.current_state == portal_out.search or portal_out.current_state == portal_out.close_door):
+		if (prox_out.event == 1 and 
+		   (portal_out.current_state == portal_out.search or 
+		    portal_out.current_state == portal_out.close_door)):
 			portal_out.found()
 			RFID_out.event = 1
 			database = open("tags.txt",'r')
 			print("object found")
-		elif prox_out.event == 1 and RFID_out.event == 1 and reader.program == False and portal_out.current_state == portal_out.detect and reader.value in database.read():
+		elif (prox_out.event == 1 and 
+		      RFID_out.event == 1 and 
+		      reader.program == False and 
+		      portal_out.current_state == portal_out.detect and 
+		      reader.value in database.readline()):
 			portal_out.recognized()
 			motor.backward()
 			database.close()
 			print("Pet recognized")
-		elif prox_out.event == 0 and portal_out.current_state == portal_out.detect:
+		elif (prox_out.event == 0 and 
+		      portal_out.current_state == portal_out.detect):
 			portal_out.lost()
 			print("lost")
-		elif (prox_out.event == 1 or prox_in.event == 1) and portal_out.current_state == portal_out.open_door:
+		elif ((prox_out.event == 1 or 
+		       prox_in.event == 1) and 
+		       portal_out.current_state == portal_out.open_door):
 			portal_out.recognized()
 			if hall_top.event == 0 and motor.motor == 0:
 				motor.stop()
 			print("opening door")
-		elif prox_in.event == 0 and prox_out.event == 0 and portal_out.current_state == portal_out.open_door:
+		elif (prox_in.event == 0 and 
+		      prox_out.event == 0 and 
+		      portal_out.current_state == portal_out.open_door):
 			portal_out.open_door_lost()
 			print("door closing")
-		elif prox_out.event == 0 and portal_out.current_state == portal_out.close_door:
-			if hall_top.event == 0 and motor.motor == 0:
+		elif (prox_out.event == 0 and 
+		      portal_out.current_state == portal_out.close_door):
+			if (hall_top.event == 0 and 
+			    motor.motor == 0):
 				motor.forward()
-			elif hall_bottom.event == 0 and motor.motor == 1:
+			elif (hall_bottom.event == 0 and 
+			      motor.motor == 1):
 				motor.stop()
 				portal_out.door_closed()
 			print("door closed")
 
 
 		if timer.trigger == 1:
-			if prox_in.event == 1 and (portal_out.current_state == portal_out.search or portal_out.current_state == portal_out.close_door):
+			if (prox_in.event == 1 and 
+			   (portal_out.current_state == portal_out.search or 
+			    portal_out.current_state == portal_out.close_door)):
 				portal_out.found()
 				RFID_in.event = 1
 				database = open("tags.txt",'r')
-			elif prox_in.event == 1 and RFID_in.event == 1 and reader.program == False and portal_out.current_state == portal_out.detect and reader.value in database.read():
+			elif (prox_in.event == 1 and 
+			      RFID_in.event == 1 and 
+			      reader.program == False and 
+			      portal_out.current_state == portal_out.detect and 
+			      reader.value in database.read()):
 				portal_out.recognized()
 				motor.backward()
 				database.close()
-			elif prox_in.event == 0 and portal_out.current_state == portal_out.detect:
+			elif (prox_in.event == 0 and 
+			      portal_out.current_state == portal_out.detect):
 				portal_out.lost()
 
-			elif (prox_in.event == 1 or prox_out.event == 1) and portal_out.current_state == portal_out.open_door:
+			elif ((prox_in.event == 1 or
+			       prox_out.event == 1) and 
+			       portal_out.current_state == portal_out.open_door):
 				portal_out.recognized()
-				if hall_top == 0 and motor.motor == 0:
+				if (hall_top == 0 and 
+				    motor.motor == 0):
 					motor.stop()
-			elif prox_in.event == 0 and prox_out.event == 0 and portal_out.current_state == portal_out.open_door:
+			elif (prox_in.event == 0 and 
+			      prox_out.event == 0 and 
+			      portal_out.current_state == portal_out.open_door):
 				portal_out.open_door_lost()
-			elif prox_in.event == 0 and portal_out.current_state == portal_out.close_door:
-				if hall_top.event == 0 and motor.motor == 0:
+			elif (prox_in.event == 0 and 
+			      portal_out.current_state == portal_out.close_door):
+				if (hall_top.event == 0 and 
+				    motor.motor == 0):
 					motor.forward()
-				elif hall_bottom.event == 0 and motor.motor == 1:
+				elif (hall_bottom.event == 0 and 
+				      motor.motor == 1):
 					motor.stop()
 					portal_out.door_closed()
 
