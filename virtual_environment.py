@@ -2,35 +2,10 @@ from operator import xor
 import os.path
 from os import path
 import BlynkLib
-from statemachine import StateMachine,State
 import time
 
 auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
 blynk = BlynkLib.Blynk(auth)
-class Full_Assembly_Outside(StateMachine):
-	search = State("Searching For Dog", initial = True)
-	detect = State("Detected Pet")
-	open_door = State("Opening Door")
-	close_door = State("closing Door")
-
-	found = search.to(detect)
-	lost = detect.to(search)
-	recognized = detect.to(open_door)
-	open_door_lost = open_door.to(close_door)
-	door_closed = close_door.to(search)
-
-class Full_Assembly_Inside(StateMachine):
-	search = State("Searching For Dog", initial = True)
-	detect = State("Detected Pet")
-	open_door = State("Opening Door")
-	close_door = State("closing Door")
-
-	found = search.to(detect)
-	lost = detect.to(search)
-	recognized = detect.to(open_door)
-	open_door_lost = open_door.to(close_door)
-	door_closed = close_door.to(search)
-
 
 
 class Door:
@@ -38,15 +13,17 @@ class Door:
 	size = 11 # the size of the door
 
 	def up(self):
-		while self.position < self.size:
-			self.position += 1
-			print(self.position)
-			time.sleep(.5)
+		if self.position != self.size:
+			while self.position < self.size:
+				self.position += 1
+				print(self.position)
+				time.sleep(.5)
 	def down(self):
-		while self.position > 0:
-			self.position -= 1
-			print(self.position)
-			time.sleep(.5)
+		if self.position != 0:
+			while self.position > 0:
+				self.position -= 1
+				print(self.position)
+				time.sleep(.5)
 
 class Motor:
 	motor = 0
@@ -73,11 +50,20 @@ class Timer:
 	stop_time = [0,0,0]
 	clock_time = [time.localtime().tm_hour,time.localtime().tm_min, time.localtime().tm_sec]
 	def compare(self):
+#		print"start time: ",self.start_time
+#		print "stop time: ",self.stop_time
 #		print(xor(self.clock_time >= self.start_time, self.clock_time >= self.stop_time))
-		if xor(self.clock_time >= self.start_time, self.clock_time >= self.stop_time):
-			self.trigger = 1
+		if self.start_time < self.stop_time:
+			if xor(self.clock_time<= self.start_time, self.clock_time >= self.stop_time):
+				self.trigger = 1
+			else:
+				self.trigger = 0
 		else:
-			self.trigger = 0
+                        if xor(self.clock_time>= self.start_time, self.clock_time >= self.stop_time):
+                                self.trigger = 1
+                        else:
+                                self.trigger = 0
+
 
 class Tag:
 	value = None
@@ -85,9 +71,11 @@ class Tag:
 	def record_tag(self,input_tag):
 		if self.program == True:
         		self.value = input_tag
+	def read_tag(self):
+		return self.value
 
-
-trigger = 0
+status = "door closed"
+state = 0
 button = Event()
 override = Event()
 timer = Timer()
@@ -99,24 +87,24 @@ RFID_out = Event()
 prox_in = Event()
 prox_out = Event()
 reader = Tag()
-portal_out = Full_Assembly_Outside()
-portal_in = Full_Assembly_Inside()
 
 """
 Setting initial values
 """
 if path.exists("timer.txt"):
-	timer_set = open("timer.txt", 'r')
-	line = timer_set.readline()
-	split_line = line.split(",")
-	for i in range(int(len(split_line)/2)):
-		timer.start_time[i] = int(split_line[i])
-	for j in range(int(len(split_line)/2),len(split_line)):
-		timer.stop_time[j-int(len(split_line)/2)] = int(split_line[j])
+        timer_set = open("timer.txt", 'r')
+        line = timer_set.readline()
+        split_line = line.split(",")
+        for i in range(int(len(split_line)/2)):
+                timer.start_time[i] = int(split_line[i])
+        for j in range(int(len(split_line)/2),len(split_line)):
+                timer.stop_time[j-int(len(split_line)/2)] = int(split_line[j])
 hall_top.event = 1
 hall_bottom.event = 1
 RF_tag = 543210987654321
 RF_tag2 = 123456789012345
+
+
 
 @blynk.VIRTUAL_WRITE(1)
 def manual_override(value):
@@ -197,6 +185,16 @@ def dog1(value):
 def dog1(value):
 	reader.value = RF_tag2
 
+@blynk.VIRTUAL_WRITE(9)
+def Prox_in_toggle(value):
+	prox_in.toggle(int(value[0]))
+
+@blynk.VIRTUAL_WRITE(10)
+def Prox_out_toggle(value):
+        prox_out.toggle(int(value[0]))
+
+
+
 while(True):
 	blynk.run()
 	timer.clock_time = [time.localtime().tm_hour,time.localtime().tm_min, time.localtime().tm_sec]
@@ -207,125 +205,51 @@ while(True):
 #	print(timer.trigger)
 	reader.program = False
 	#time.sleep(.5)
-        if( button.event == 1 and 
-	    hall_top.event == 1):
-		motor.backward()
-		trigger = 1
-		print(0)
-        elif( button.event == 1 and 
-	      hall_top.event == 0 and 
-	      motor.motor == -1):
-		motor.stop()
-		print(1)
-        elif (button.event == 0 and 
-		hall_top.event == 0 and 
-		motor.motor == -1 and 
-		trigger == 1):
-            motor.stop()
-            time.sleep(2)
-            print(3)
-        elif( button.event == 0 and 
-		hall_top.event == 0 and
-		motor.motor == 0 and 
-		trigger == 1):
-            motor.forward()
-            print(4)
-	elif (motor.motor == 1 and 
-		hall_bottom.event == 0 and 
-		trigger == 1):
-		motor.stop()
-		trigger = 0
-		print(5)
-	elif (motor.motor == 0 and 
-		hall_bottom.event == 0 and 
-		button.event == 0 and 
-		trigger == 0):
-		print("base")
-		if (prox_out.event == 1 and 
-		   (portal_out.current_state == portal_out.search or 
-		    portal_out.current_state == portal_out.close_door)):
-			portal_out.found()
-			RFID_out.event = 1
-			database = open("tags.txt",'r')
-			print("object found")
-		elif (prox_out.event == 1 and 
-		      RFID_out.event == 1 and 
-		      reader.program == False and 
-		      portal_out.current_state == portal_out.detect and 
-		      reader.value in database.readline()):
-			portal_out.recognized()
-			motor.backward()
-			database.close()
-			print("Pet recognized")
-		elif (prox_out.event == 0 and 
-		      portal_out.current_state == portal_out.detect):
-			portal_out.lost()
-			print("lost")
-		elif ((prox_out.event == 1 or 
-		       prox_in.event == 1) and 
-		       portal_out.current_state == portal_out.open_door):
-			portal_out.recognized()
-			if hall_top.event == 0 and motor.motor == 0:
-				motor.stop()
-			print("opening door")
-		elif (prox_in.event == 0 and 
-		      prox_out.event == 0 and 
-		      portal_out.current_state == portal_out.open_door):
-			portal_out.open_door_lost()
-			print("door closing")
-		elif (prox_out.event == 0 and 
-		      portal_out.current_state == portal_out.close_door):
-			if (hall_top.event == 0 and 
-			    motor.motor == 0):
-				motor.forward()
-			elif (hall_bottom.event == 0 and 
-			      motor.motor == 1):
-				motor.stop()
-				portal_out.door_closed()
-			print("door closed")
+	print("state = "+status)
+	if state == 0:
+#	Door is closed, and sensors are looking for object
+		status = "door closed"
+		if (timer.trigger == 1 and prox_in.event == 1) or prox_out.event == 1:
+			state = 1
+		if button.event == 1:
+			state = 2
 
+	if state == 1:
+#	RFID sensor searches for recognized tag
+		status = "verifying RFID tag"
+		if path.exists("tags.txt"):
+			ID = open("tags.txt", 'r')
+			for line in ID:
+				if line == str(reader.read_tag()) or line == str(reader.read_tag())+"\n":
+					state = 2
+					break
+				state = 0
+			ID.close()
+		else:
+			state = 0
 
-		if timer.trigger == 1:
-			if (prox_in.event == 1 and 
-			   (portal_out.current_state == portal_out.search or 
-			    portal_out.current_state == portal_out.close_door)):
-				portal_out.found()
-				RFID_in.event = 1
-				database = open("tags.txt",'r')
-			elif (prox_in.event == 1 and 
-			      RFID_in.event == 1 and 
-			      reader.program == False and 
-			      portal_out.current_state == portal_out.detect and 
-			      reader.value in database.read()):
-				portal_out.recognized()
-				motor.backward()
-				database.close()
-			elif (prox_in.event == 0 and 
-			      portal_out.current_state == portal_out.detect):
-				portal_out.lost()
+	if state == 2:
+#	Door opens
+		status = "opening door"
+		if hall_top.event == 1:
+			#motor.backward()
+			pass
+		elif hall_top.event == 0:
+			motor.stop()
+			time.sleep(2)
+			state = 3
 
-			elif ((prox_in.event == 1 or
-			       prox_out.event == 1) and 
-			       portal_out.current_state == portal_out.open_door):
-				portal_out.recognized()
-				if (hall_top == 0 and 
-				    motor.motor == 0):
-					motor.stop()
-			elif (prox_in.event == 0 and 
-			      prox_out.event == 0 and 
-			      portal_out.current_state == portal_out.open_door):
-				portal_out.open_door_lost()
-			elif (prox_in.event == 0 and 
-			      portal_out.current_state == portal_out.close_door):
-				if (hall_top.event == 0 and 
-				    motor.motor == 0):
-					motor.forward()
-				elif (hall_bottom.event == 0 and 
-				      motor.motor == 1):
-					motor.stop()
-					portal_out.door_closed()
+	if state == 3:
+#	Door is open and is holding position
+		status = "door open"
+		if button.event == 0 and prox_in.event == 0 and prox_out.event == 0:
+			state = 4
 
-		
-
-
-    
+	if state == 4:
+#	Door is closing
+		status = "closing door"
+		if hall_bottom.event == 1:
+			motor.forward()
+		elif hall_bottom.event == 0:
+			motor.stop()
+			state = 0
