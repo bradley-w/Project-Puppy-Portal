@@ -5,6 +5,7 @@ import BlynkLib
 import time
 
 auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
+#auth = "JDh1tnfwVYLDA3f98Zn8TtAKKKSr7DUM"
 blynk = BlynkLib.Blynk(auth)
 
 
@@ -74,6 +75,8 @@ class Tag:
 	def read_tag(self):
 		return self.value
 
+count = 0
+prev_state = 1
 status = "door closed"
 state = 0
 button = Event()
@@ -134,6 +137,18 @@ def programmable_timer(value):
 			timer_setter.write(str(timer.stop_time[j])+',')
 		else:
 			timer_setter.write(str(timer.stop_time[j]))
+	if timer.start_time[0]>12:
+		print("Start time set to: "+str(timer.start_time[0]-12)+":"+str(timer.start_time[1])+" PM")
+	elif timer.start_time[0] == 12:
+		print("Start time set to: "+str(timer.start_time[0])+":"+str(timer.start_time[1])+" PM")
+	else:
+		print("Start time set to: "+str(timer.start_time[0])+":"+str(timer.start_time[1])+" AM")
+	if timer.stop_time[0]>12:
+		print("Stop time set to: "+str(timer.stop_time[0]-12)+":"+str(timer.stop_time[1])+" PM")
+	elif timer.stop_time[0] == 12:
+		print("Stop time set to: "+str(timer.stop_time[0])+":"+str(timer.stop_time[1])+" PM")
+	else:
+		print("Stop time set to: "+str(timer.stop_time[0])+":"+str(timer.stop_time[1])+" AM")
 
 @blynk.VIRTUAL_WRITE(3)
 def record_RFID_tag(value):
@@ -143,14 +158,14 @@ def record_RFID_tag(value):
 			check = True
 			line = tag.readline()
 			while line:
-				print(line)
+				#print(line)
 				if line == str(reader.value)+"\n" or line == str(reader.value):
 					check = False
 					break
 				line = tag.readline()
 			tag.close()
 			if check == True:
-				print("printing tag")
+				print("saving tag")
 				tag = open("tags.txt",'a')
 				tag.write(str("\n"+str(reader.value)))
 				tag.close()
@@ -205,51 +220,82 @@ while(True):
 #	print(timer.trigger)
 	reader.program = False
 	#time.sleep(.5)
-	print("state = "+status)
+#	if count == 0 and prev_state != 0:
+#		print("state = "+status)
+#		count += 1
 	if state == 0:
 #	Door is closed, and sensors are looking for object
+		if count == 0:
+			print("status = door closed")
+			count += 1
+		if count > 0:
+			prev_state = -1
 		status = "door closed"
 		if (timer.trigger == 1 and prox_in.event == 1) or prox_out.event == 1:
 			state = 1
+			count = 0
 		if button.event == 1:
 			state = 2
+			count = 0
 
 	if state == 1:
 #	RFID sensor searches for recognized tag
+                if count == 0:
+			print("status = verifying RFID tag")
+			count += 1
+		prev_state = state-1
 		status = "verifying RFID tag"
 		if path.exists("tags.txt"):
 			ID = open("tags.txt", 'r')
 			for line in ID:
 				if line == str(reader.read_tag()) or line == str(reader.read_tag())+"\n":
 					state = 2
+					count = 0
 					break
 				state = 0
+				count = 0
 			ID.close()
 		else:
 			state = 0
+			count = 0
 
 	if state == 2:
 #	Door opens
+                if count == 0:
+			print("status = opening door")
+			count += 1
+		prev_state = state-1
 		status = "opening door"
 		if hall_top.event == 1:
 			#motor.backward()
 			pass
 		elif hall_top.event == 0:
 			motor.stop()
+			print("status = door open")
 			time.sleep(2)
 			state = 3
+			count = 0
 
 	if state == 3:
 #	Door is open and is holding position
+#		if count == 0:
+#			print("status = door open")
+#			count += 1
+		prev_state = state
 		status = "door open"
 		if button.event == 0 and prox_in.event == 0 and prox_out.event == 0:
 			state = 4
+			count = 0
 
 	if state == 4:
 #	Door is closing
-		status = "closing door"
+		if count == 0:
+			print("status = closing door")
+			count += 1
+		prev_state = state-1
 		if hall_bottom.event == 1:
 			motor.forward()
 		elif hall_bottom.event == 0:
 			motor.stop()
 			state = 0
+			count = 0
