@@ -228,11 +228,10 @@ while(True):
 		if count == 0:
 			print("status = door closed")
 			count += 1
-		if count > 0:
-			prev_state = -1
 		status = "door closed"
 		if (timer.trigger == 1 and prox_in.event == 1) or prox_out.event == 1:
 			state = 1
+			prev_state = 0
 			count = 0
 		if button.event == 1:
 			state = 2
@@ -243,7 +242,6 @@ while(True):
                 if count == 0:
 			print("status = verifying RFID tag")
 			count += 1
-		prev_state = state-1
 		status = "verifying RFID tag"
 		if path.exists("tags.txt"):
 			ID = open("tags.txt", 'r')
@@ -252,11 +250,11 @@ while(True):
 					state = 2
 					count = 0
 					break
-				state = 0
+				state = prev_state
 				count = 0
 			ID.close()
 		else:
-			state = 0
+			state = prev_state
 			count = 0
 
 	if state == 2:
@@ -264,7 +262,6 @@ while(True):
                 if count == 0:
 			print("status = opening door")
 			count += 1
-		prev_state = state-1
 		status = "opening door"
 		if hall_top.event == 1:
 			#motor.backward()
@@ -292,9 +289,11 @@ while(True):
 		if count == 0:
 			print("status = closing door")
 			count += 1
-		prev_state = state-1
 		if hall_bottom.event == 1:
 			motor.forward()
+			if (prox_in.event == 1 and timer.trigger == 1) or prox_out.event == 1:
+				state = 1
+				prev_state = 4
 		elif hall_bottom.event == 0:
 			motor.stop()
 			state = 0
