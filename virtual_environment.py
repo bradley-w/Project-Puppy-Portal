@@ -294,6 +294,10 @@ while(True):
 			if (prox_in.event == 1 and timer.trigger == 1) or prox_out.event == 1:
 				state = 1
 				prev_state = 4
+				count = 0
+			elif button.event == 1:
+				state = 2
+				count = 0
 		elif hall_bottom.event == 0:
 			motor.stop()
 			state = 0
