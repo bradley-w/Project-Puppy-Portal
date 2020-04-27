@@ -4,8 +4,8 @@ from os import path
 import BlynkLib
 import time
 
-auth = "aJuDFfbAernE8QQw4pJjyHOJT96Qcaw_"
-#auth = "JDh1tnfwVYLDA3f98Zn8TtAKKKSr7DUM"
+auth = "authentication token goes here"
+
 blynk = BlynkLib.Blynk(auth)
 
 
