@@ -7,4 +7,7 @@ The Blynk app on iPhone or Android
 
 Raspberry Pi 0 w
 
-Blynk library for Python
+Blynk library for Python</p>
+***To install the correct library, run the following command in your terminal window***</p>
+`python -m pip install blynk-library-python`
+
